@@ -2,6 +2,7 @@ import express, { response } from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import multer from "multer";
+import { fileURLToPath } from 'url';
 import path from "path";
 import mongoose from "mongoose";
 import databaseConnection from "./utils/database.js"
@@ -10,10 +11,9 @@ import Question from "./models/quesModel.js";
 import axios from "axios";
 
 dotenv.config();
-
 databaseConnection();
-
 const app = express();
+
 app.use(express.json());
 app.use(cors({
     origin: 'http://localhost:5173', 
@@ -21,11 +21,21 @@ app.use(cors({
     credentials: true, 
   }));
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(express.static(path.join(__dirname, 'dist')));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
+});
+
+
 const storage = multer.memoryStorage();
 
 const upload = multer({storage})
 
-app.post('/upload', upload.single('file'), async(req, res) => {
+app.post('/', upload.single('file'), async(req, res) => {
     try {
       console.log('Request Body:', req.body); 
       console.log('Uploaded File:', req.file); 
